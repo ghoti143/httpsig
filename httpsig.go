@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/rsa"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -68,6 +69,9 @@ func NewSignTransport(transport http.RoundTripper, opts ...signOption) http.Roun
 			defer r.Body.Close()
 
 			if n != 0 {
+				fmt.Println("body length", n)
+				//TODO this breaks the request
+				//net/http: HTTP/1.x transport connection broken: http: ContentLength=44 with Body length 0
 				r.Body = ioutil.NopCloser(bytes.NewReader(b.Bytes()))
 			}
 		}
