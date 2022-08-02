@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/rsa"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -60,20 +59,18 @@ func NewSignTransport(transport http.RoundTripper, opts ...signOption) http.Roun
 		nr := r.Clone(r.Context())
 
 		b := &bytes.Buffer{}
-		if r.Body != nil {
-			n, err := b.ReadFrom(r.Body)
+		if r.Body != nil {		
+			
+			// this broke the request 
+			// was getting net/http: HTTP/1.x transport connection broken: http: ContentLength=44 with Body length 0
+			// switched to read bytes from a copy of body.
+			bodyCopy, _ := r.GetBody()
+			defer bodyCopy.Close()
+
+			_, err := b.ReadFrom(bodyCopy)
 			if err != nil {
 				return nil, err
-			}
-
-			defer r.Body.Close()
-
-			if n != 0 {
-				fmt.Println("body length", n)
-				//TODO this breaks the request
-				//net/http: HTTP/1.x transport connection broken: http: ContentLength=44 with Body length 0
-				r.Body = ioutil.NopCloser(bytes.NewReader(b.Bytes()))
-			}
+			}						
 		}
 
 		// Always set a digest (for now)
